@@ -3,7 +3,9 @@ const cors = require('cors')
 const app = express();
 const bodyParser = require('body-parser')
 const io = require('socket.io')();
-const axios = require("axios");
+
+// Use when you want to get data from other places to pass to UI
+// const axios = require("axios");
 
 app.use(cors())
 app.use(bodyParser.json())
