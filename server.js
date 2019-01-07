@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express');
 const cors = require('cors')
 const app = express();
@@ -9,9 +10,6 @@ const io = require('socket.io')();
 
 app.use(cors())
 app.use(bodyParser.json())
-const serverPort = process.env.PORT || 24601;
-
-app.listen(serverPort, () => console.log(`Listening on port ${serverPort}!!!!`));
 
 // io.on('connection', (client) => {
 //   client.on('subscribeToTimer', (interval) => {
@@ -22,11 +20,35 @@ app.listen(serverPort, () => console.log(`Listening on port ${serverPort}!!!!`))
 //   });
 // });
 
+app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}!!!!`));
+
+
+let socket
+
 io.on("connection", socket => {
-  setInterval(() => {
-    socket.emit("timer", 'lol');
-  }, 1000)
+  // socket.emit('socket_order', {
+  //   name: 'Jon',
+  //   order: {
+  //     name: 'Chicken Sandiwch',
+  //     deadline: '2019-01-07T16:33:59+08:00',
+  //     period: 'Lunch',
+  //     comments: ['Only Shit yo'],
+  //   }
+  // })
+  // socket.emit('delete_last_order', {name:'Jon'})
+  console.log('client connected')
 });
+
+app.post('/sendOrder', (req,res) => {
+  io.emit('socket_order', req.body)
+  res.send('server received.')
+})
+
+app.post('/deleteLastOrder', (req,res) => {
+  io.emit('delete_last_order', req.body)
+  res.send('server received.')
+})
+
 
 const port = 8000;
 io.listen(port);
