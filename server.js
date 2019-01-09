@@ -22,20 +22,40 @@ app.use(bodyParser.json())
 
 app.listen(process.env.PORT, () => console.log(`Listening on port ${process.env.PORT}!!!!`));
 
+let orders
+var SocketIO
 
-let socket
+const sendOrders = (req) => {
+  return new Promise((resolve, reject) => {
+    io.emit('getOrders', req)
+    if (orders) {
+      resolve(orders)
+      orders = null
+    }
+    else {
+      setTimeout(() => {
+        if (orders) {
+          resolve(orders)
+          orders = null
+        }
+        else {
+          setTimeout(() => {
+            if (orders) {
+              reject(orders)
+              orders = null
+            }
+          }, 1000)
+        }
+      }, 1000)
+    }
+  });
+}
 
 io.on("connection", socket => {
-  // socket.emit('socket_order', {
-  //   name: 'Jon',
-  //   order: {
-  //     name: 'Chicken Sandiwch',
-  //     deadline: '2019-01-07T16:33:59+08:00',
-  //     period: 'Lunch',
-  //     comments: ['Only Shit yo'],
-  //   }
-  // })
-  // socket.emit('delete_last_order', {name:'Jon'})
+  SocketIO = socket
+  socket.on('sendOrders', res => {
+    orders = res
+  })
   console.log('client connected')
 });
 
@@ -49,6 +69,23 @@ app.post('/deleteLastOrder', (req,res) => {
   res.send('server received.')
 })
 
+app.post('/deleteOrder', (req,res) => {
+  io.emit('deleteOrder', req.body)
+  res.send('deleted order')
+})
+
+app.post('/getOrders', (req,res) => {
+  io.emit('getOrders', req.body)
+  sendOrders(req.body).then(val => {
+    res.send(val)
+  })
+  .catch(err => console.log(err))
+  // if (SocketIO) {
+  //   SocketIO.on('sendOrders', data => {
+  //     res.send(data)
+  //   })
+  // }
+})
 
 const port = 8000;
 io.listen(port);
